@@ -1,0 +1,149 @@
+<% include header.html %>
+<body>
+
+  <div style="width:75%;">
+  <canvas id="myChart"></canvas>
+  </div>
+
+  <form id="updateChart" method="post" role="form" style="display:none">
+    <div>
+      <input type="submit" value="Post entry" class="btn btn-primary">
+    </div>
+  </form>
+
+<script>
+
+var ctx = document.getElementById('myChart').getContext('2d');
+
+var temperature, humidity, SessionState;
+var datapoints = new Array(7);
+var humiPoints = new Array(7);
+
+var config = {
+  type: 'line',
+  data: {
+    labels: ['-6 min', '-5 min', '-4 min', '-3 min', '-2 min', '-1 min', '0 min'],
+    datasets: [{
+      label: 'Temperature at my home in past 7 mins ( *C)',
+      fill: false,
+      lineTension: 0.1,
+      backgroundColor: 'rgba(75,192,192,0.4)',
+      borderColor: 'rgba(75,192,192,1)',
+      borderCapStyle: 'butt',
+      borderDash: [],
+      borderDashOffset: 0.0,
+      borderJoinStyle: 'miter',
+      pointBorderColor: 'rgba(75,192,192,1)',
+      pointBackgroundColor: '#fff',
+      pointBorderWidth: 1,
+      pointHoverRadius: 5,
+      pointHoverBackgroundColor: 'rgba(75,192,192,1)',
+      pointHoverBorderColor: 'rgba(220,220,220,1)',
+      pointHoverBorderWidth: 2,
+      pointRadius: 1,
+      pointHitRadius: 10,
+      data: datapoints
+    },{
+      label: 'Humidity at my home in past 7 mins ( %)',
+      fill: false,
+      lineTension: 0.1,
+      backgroundColor: 'rgba(192,148,75,1)',
+      borderColor: 'rgba(192,148,75,1)',
+      borderCapStyle: 'butt',
+      borderDash: [],
+      borderDashOffset: 0.0,
+      borderJoinStyle: 'miter',
+      pointBorderColor: 'rgba(192,148,75,1)',
+      pointBackgroundColor: '#fff',
+      pointBorderWidth: 1,
+      pointHoverRadius: 5,
+      pointHoverBackgroundColor: 'rgba(192,148,75,1)',
+      pointHoverBorderColor: 'rgba(220,220,220,1)',
+      pointHoverBorderWidth: 2,
+      pointRadius: 1,
+      pointHitRadius: 10,
+      data: humiPoints
+    }]
+  }
+};
+
+sessionStorage.setItem("DataCount", 0);
+
+window.onload = function() {
+
+  window.myLine = new Chart(ctx, config);
+  var dataLength = datapoints.length;
+
+  temperature = "<%= dht11.temperature %>";
+  humidity = "<%= dht11.humidity %>";
+  SessionState = "<%= SessionState %>";
+  console.log(temperature, humidity, SessionState, datapoints.length);
+
+  //for (var i = datapoints.length; i >= 6; --i) {
+  //  datapoints[i] = Math.floor(Math.random() * 100);
+  //}
+
+  if(SessionState == 0){
+    DataCount = 0;
+    localStorage.setItem("DataCount", 0);
+
+    var tempName = dataLength-1;
+    localStorage.setItem(tempName.toString(), temperature);
+    datapoints[dataLength - 1] = temperature;
+
+    var humiName = tempName + 'h';
+    localStorage.setItem(humiName.toString(), humidity);
+    humiPoints[dataLength - 1] = humidity;
+
+//    console.log("---1----", dataLength, datapoints[dataLength-1]);
+
+  }else{
+    DataCount = localStorage.getItem("DataCount");
+
+    for (var i = dataLength-DataCount; i < dataLength; i = i+1){
+      datapoints[i-1] = localStorage.getItem(i.toString());
+
+      var humiName = i.toString() + 'h';
+      humiPoints[i-1] = localStorage.getItem(humiName.toString());
+
+      var tempName = i-1;
+      localStorage.setItem(tempName.toString(), datapoints[i-1]);
+
+      var humiName = tempName + 'h';
+      localStorage.setItem(humiName.toString(), humiPoints[i-1]);
+//      console.log("---2----", i, localStorage.getItem(i.toString()),datapoints[i-1]);
+    }
+    datapoints[dataLength - 1] = temperature;
+    var tempName = dataLength-1;
+    localStorage.setItem(tempName.toString(), temperature);
+
+    humiPoints[dataLength - 1] = humidity;
+    var humiName = tempName + 'h';
+    localStorage.setItem(humiName.toString(), humidity);
+  }
+
+  if(DataCount == dataLength){
+    DataCount = dataLength;
+  }else{
+    DataCount++;
+  }
+
+  localStorage.setItem("DataCount", DataCount);
+//  console.log(DataCount);
+
+  window.myLine.update();
+
+//  sessionStorage.setItem(name, temperature);
+//  console.log("===",sessionStorage.getItem(name));
+}
+
+  function updateData()
+  {
+    document.getElementById("updateChart").submit();
+  }
+  setTimeout(updateData, 12000);
+
+  </script>
+  </body>
+
+<% include footer.html %>
