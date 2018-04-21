@@ -15,7 +15,10 @@ The major technical components and platfomrs that the project requires are: Twil
 
 * npm start
 
-* Open a browser client, type: http://localhost;3000. You will see a chart, which updates, every minute, to display temperature and humidity values. These values are collected from a remote place that the sensor is put at.
+* Open a browser client, type: http://localhost:3000. You will see a chart, which updates, every minute, to display temperature and humidity values. These values are collected from a remote place that the sensor is put at.
+* Delete the Sync doc: http://localhost:3000/delete-document
+* Create the Sync doc again: http://localhost:3000/create-document
+
 
 
 ### To run esp-wrover-kit board and dht11 sensor
