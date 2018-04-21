@@ -1,13 +1,15 @@
 {
   "name": "twilio-sync-esp32-wrover-kit-express-chartjs-demo",
   "description": "An cloud-iot demo based on Twilio-Sync and development board of esp32 wrover kit. Its UI is developed by Express and Chartjs.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Xiaozhong(Jim) Hua <huaxiaozhong1@hotmail.com>",
   "license": "MIT",
   "repository": "https://github.com/huaxiaozhong1/twilio-sync-esp32-wrover-kit-express-chartjs-demo",
   "keywords": [
-    "cloud-iot",
+    "cloud",
+    "iot",
     "twilio",
+    "sensor",
     "esp32",
     "esp-wrover-kit",
     "Arduino",
