@@ -1,6 +1,4 @@
 /* License: MIT */
-#include<string.h>
-
 #include "WiFiClientSecure.h"
 #include "certificates.hpp"
 #include <PubSubClient.h>
@@ -12,15 +10,8 @@
 #define LED_PIN 2
 
 /* WiFi SSID and Password */
-const char* ssid                        = "";
-const char* password                    = "";
-
-int pinDHT11 = 2;
-
-SimpleDHT11 dht11;
-byte temperature = 0;
-byte humidity = 0;
-int err = SimpleDHTErrSuccess;
+const char* ssid                        = "Tenda_457F60";
+const char* password                    = "62642873";
 
 /* 
  *  Sync Settings
@@ -28,6 +19,7 @@ int err = SimpleDHTErrSuccess;
  *  Enter your document's unique name and a device name.
  */
 const char* sync_document               = "sync/docs/dht11";
+const char* sync_control                = "sync/docs/BoardLED";
 const char* sync_device_name            = "ESP32_Dev_Board";
 
 /* Sync server and MQTT setup; you probably don't have to change these. */
@@ -37,9 +29,21 @@ const uint16_t maxMQTTpackageSize       = 512;
 
 WiFiClientSecure espClient;
 PubSubClient client(mqtt_server, mqtt_port, espClient);
+
 StaticJsonBuffer<maxMQTTpackageSize> jsonBuffer;
 String input = "{\"temperature\":\"0\",\"humidity\":\"0\"}";
 
+int pinDHT11 = 2;
+
+SimpleDHT11 dht11;
+byte temperature = 0;
+byte humidity = 0;
+int err = SimpleDHTErrSuccess;
+
+long lastReconnectAttempt = 0;
+long lastReadDHT11 = 0;
+long lastSubscribe = 0;
+String srv_cmd;
 /* 
  * Our Twilio Connected Devices message handling callback.  This is passed as a 
  * callback function when we subscribe to the document, and any messages will 
@@ -52,17 +56,26 @@ void callback(char* topic, byte* payload, unsigned int length)
 
         Serial.print("Message arrived on topic "); Serial.println(msg.get());
         
-//        StaticJsonBuffer<maxMQTTpackageSize> jsonBuffer;
+        StaticJsonBuffer<maxMQTTpackageSize> jsonBuffer;
         JsonObject& root = jsonBuffer.parseObject(msg.get());
+
+        String command = root["msg"];
+
+        srv_cmd = command;
+
+        Serial.println("srv's command:" + srv_cmd);
+
+/*
         String led_command           = root["led"];
 
-//        if (led_command == "ON") {
-//                digitalWrite(LED_PIN, HIGH);
-//                Serial.println("LED turned on!");
-//        } else {
-//                digitalWrite(LED_PIN, LOW);
-//                Serial.println("LED turned off!");
-//        }
+        if (led_command == "ON") {
+                digitalWrite(LED_PIN, HIGH);
+                Serial.println("LED turned on!");
+        } else {
+                digitalWrite(LED_PIN, LOW);
+                Serial.println("LED turned off!");
+        }
+*/
 }
 
 
@@ -73,20 +86,19 @@ void callback(char* topic, byte* payload, unsigned int length)
  * 
  * If everything works, we subscribe to the document topic and return.
  */
-void connect_mqtt() 
+boolean connect_mqtt() 
 {
-        while (!client.connected()) {
-                Serial.println("\nAttempting to connect to Twilio Sync...");
-                if (client.connect(sync_device_name)) {
-                        Serial.print("Connected!  Subscribing to "); Serial.println(sync_document);
-                        client.setCallback(callback);
-                        client.subscribe(sync_document);
-                } else {
-                        Serial.print("failed, rc=");
-                        Serial.print(client.state());
-                        delay(20000);
-                }
-        }
+ Serial.println("\nAttempting to connect to Twilio Sync...");
+ 
+ if(client.connect(sync_device_name)) {
+   Serial.print("Connected!  Subscribing to "); Serial.println(sync_control);
+   client.setCallback(callback);
+   client.subscribe(sync_control);
+   return client.connected();
+ }else{
+  Serial.println("Failure with connection: " + client.state());
+ }
+
 }
 
 
@@ -118,60 +130,75 @@ void setup()
 /* Our loop constantly checks we are still connected.  On disconnects we try again. */
 void loop() 
 {
-    // Step 1: ry to connect Twilio MQTT server.
-    
-    if (!client.connected()) {
-        Serial.println("MQTT server isn't connected. Connecting...");
-        connect_mqtt();
-    }
-
-    delay(3000);
-        
-    // Step 2: get temperature and humidity from DHT11 scaner.
-
-    while((err = dht11.read(pinDHT11, &temperature, &humidity, NULL)) != SimpleDHTErrSuccess) {
-      Serial.print("Read DHT11 failed, err="); 
-      Serial.println(err);
-      delay(2000);    // If error with getting info from dht11, re-try it.
-    }
-    // When sampling is successful. 
-    Serial.print("Sample OK: ");
-    Serial.print((int)temperature); Serial.print(" *C, "); 
-    Serial.print((int)humidity); Serial.println(" H");
-
-    // Step 3: send status of temperature and humidity via MQTT
-
-    // Here's an example of publishing from the ESP32.
-    // Uncomment until the end of the function to send a 'msg' back to Sync
-    // every 1 minutes!
-
-    delay(30000);
-     
-    Serial.println("Sending status of temperature and humidity to Twilio!");    
-    
-    JsonObject& root = jsonBuffer.parseObject(input);
-    
-    long Temperature = root[String("temperature")];
-    Temperature = (long) temperature;
-    root[String("temperature")] = Temperature;
-    
-    long Humidity = root[String("humidity")];
-    Humidity = (long) humidity;
-    root[String("humidity")] = Humidity;
-    
-    String output;
-    root.printTo(output);
-
-    char payload[512];
-
-    strcpy(payload, output.c_str());
-    
-    while((client.publish(
-      sync_document, 
-      payload))!=true){
-      Serial.println("MQTT publish isn't successful. Try again...");
-      delay(10000);
+  if(!client.connected()){
+    long now = millis();
+    if((now - lastReconnectAttempt) > 2000){    // try to connect srv in every 2 seconds.
+      lastReconnectAttempt = now;
+      if(connect_mqtt()){                     // the actual function to connect.
+        lastReconnectAttempt = 0;
       }
-    Serial.println("Succeed in sending T & H to Twilio.");
-    client.loop();
-}
+    }
+  }
+  else{    // if connected.
+    long dht11_now = millis();    // get the current seconds, to see if reading.
+    
+    if((dht11_now -lastReadDHT11) > 10000){    // read dht11 every 10 seconds.
+      lastReadDHT11 = dht11_now;
+      
+      if((err = dht11.read(pinDHT11, &temperature, &humidity, NULL)) == SimpleDHTErrSuccess){
+
+        Serial.print("Sample OK: ");
+        Serial.print((int)temperature); Serial.print(" *C, "); 
+        Serial.print((int)humidity); Serial.println(" H");
+        
+//        lastReadDHT11 = 0;        // if succeed in reading of dht11.
+
+        JsonObject& root = jsonBuffer.parseObject(input);
+    
+        long Temperature = root[String("temperature")];
+        Temperature = (long) temperature;
+        root[String("temperature")] = Temperature;
+    
+        long Humidity = root[String("humidity")];
+        Humidity = (long) humidity;
+        root[String("humidity")] = Humidity;
+    
+        String output;
+        root.printTo(output);
+
+        char payload[512];
+
+        strcpy(payload, output.c_str());
+
+        long subscribe_now = millis();
+        if((subscribe_now - lastSubscribe) > 60000){    // subscribe every 1 min.
+
+        Serial.print("data publish time: ");
+        Serial.print((long)subscribe_now); Serial.print(", "); 
+        Serial.print((long)lastSubscribe); Serial.println(". ");
+          
+          lastSubscribe = subscribe_now;
+
+          if(srv_cmd == "pause"){
+            client.disconnect();
+            srv_cmd = "no";
+          }
+          else{
+              if((client.publish(
+                sync_document, 
+                payload))==true){        // if success.   
+                Serial.println("Succeed in sending T & H to Twilio.");
+              }else{
+                Serial.println("Failure with publish: " + client.state());
+              }
+          }
+
+        }
+      }
+    }
+  }
+
+  client.loop();    // handle msg sent from srv right after checking srv connection and reading dht11.
+     
+}    // end of function of "loop".
+
