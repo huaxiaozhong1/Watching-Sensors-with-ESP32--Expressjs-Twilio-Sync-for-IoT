@@ -12,7 +12,7 @@ Twilio provides 2 individual API sets that run for Node.js environment. One is d
 
 * sudo npm install --save
 
-* Apply for account information from Twilio-Sync, fill them into .env. There are 3 parameters: accountSid, authToken, serviceSid.
+* Apply for account information from Twilio-Sync, fill them into .env. There are 3 parameters: accountSid, authToken, serviceSid. Fill the paremeters into .env at the folder.
 
 * npm start
 
@@ -26,7 +26,7 @@ Twilio provides 2 individual API sets that run for Node.js environment. One is d
 
 * sudo npm install --save
 
-* Apply for account information from Twilio-Sync, fill them into .env. There are 3 parameters: TWILIO_ACCOUNT_SID, TWILIO_API_KEY, TWILIO_API_SECRET.
+* Apply for account information from Twilio-Sync, fill them into .env. There are 3 parameters: TWILIO_ACCOUNT_SID, TWILIO_API_KEY, TWILIO_API_SECRET. Fill the parameters into .env at the folder.
 
 * npm start
 

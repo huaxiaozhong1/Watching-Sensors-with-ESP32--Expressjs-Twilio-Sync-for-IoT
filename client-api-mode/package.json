@@ -1,6 +1,6 @@
 {
   "name": "client-api-mode",
-  "version": "0.1.1",
+  "version": "0.1.5",
   "description": "Twilio-iot-sensor-esp32-arduino-express-chart-demo using Twilio Sync javascript client library",
   "main": "app.js",
   "scripts": {
