@@ -47,7 +47,7 @@ const service = client.sync.services(serviceSid);
 SyncDoc = 'dht11';
 SyncControl = 'BoardLED'
 
-/* Function: Create $SyncDoc under $service.
+/* Function: Create $SyncControl under $service.
 */
 function createSyncControl(service, SyncControl) {
   service.documents
@@ -57,7 +57,7 @@ function createSyncControl(service, SyncControl) {
         command: 'no',
         state: 'ready'
      },
-      ttl: 0 
+      ttl: 0
     })
     .then(response => {
       console.log(response);
@@ -65,40 +65,7 @@ function createSyncControl(service, SyncControl) {
 }
 
 
-/* Function: Create $SyncDoc under $service.
-*/
-function createSyncDoc(service, SyncDoc) {
-  service.documents
-    .create({
-      uniqueName: SyncDoc,
-      data: {
-        temperature: '0',
-        humidity: '0'
-     },
-      ttl: 0 
-    })
-    .then(response => {
-//      console.log(response);
-     console.log("== createSyncDoc ==");
-    });
-}
-
-/* Function: Delete the $SyncDoc under $service.
-*/
-function deleteSyncDoc(service, SyncDoc) {
-  service
-    .documents(SyncDoc)
-    .remove()
-    .then(response => {
- //     console.log(response);
-    console.log("== deleteSyncDoc =="); 
-})
-    .catch(error => {
-      console.log(error);
-    });
-}
-
-/* Function: Retrieve the $SyncDoc under $service.
+/* Function: Update the $SyncControl under $service.
 */
 function updateSyncControl(service, SyncControl) {
   service
@@ -112,7 +79,58 @@ function updateSyncControl(service, SyncControl) {
  })
  .catch(error => {
    console.log(error);
- });   
+ });
+}
+
+/* Function: Create $SyncDoc under $service.
+*/
+function createSyncDoc(service, SyncDoc) {
+  service.documents
+    .create({
+      uniqueName: SyncDoc,
+      data: {
+        temperature: '0',
+        humidity: '0'
+     },
+      ttl: 0
+    })
+    .then(response => {
+//      console.log(response);
+     console.log("== createSyncDoc ==");
+    });
+}
+
+/* Function: Delete the $SyncDoc under $service.
+*/
+function updateSyncDoc(service, SyncDoc) {
+  service
+    .documents(SyncDoc)
+    .update({
+      data: { temperature: 30,
+              humidity: 20 },
+    })
+    .then(response => {
+     console.log(response);
+//    console.log("== deleteSyncDoc ==");
+})
+    .catch(error => {
+      console.log(error);
+    });
+}
+
+/* Function: Delete the $SyncDoc under $service.
+*/
+function deleteSyncDoc(service, SyncDoc) {
+  service
+    .documents(SyncDoc)
+    .remove()
+    .then(response => {
+ //     console.log(response);
+    console.log("== deleteSyncDoc ==");
+})
+    .catch(error => {
+      console.log(error);
+    });
 }
 
 /* Function: Retrieve the $SyncDoc under $service.
@@ -123,8 +141,10 @@ function retrieveSyncDoc(service, SyncDoc, dht11) {
     .fetch()
     .then(response => {
       dht11 = response.data;
-//      console.log(response);
-     console.log("== retrieveSyncDoc ==");
+    console.log(response);
+/*
+   console.log("== retrieveSyncDoc ==");
+*/
     })
     .catch(error => {
       console.log(error);
@@ -153,12 +173,15 @@ function renderSyncDoc(service, SyncDoc, SessionState, SrcLog, res) {
   .documents(SyncDoc)
   .fetch()
   .then(response => {
-    
-    console.log(SrcLog, 
-      response.data.temperature, 
+
+    console.log(SrcLog,
+      response.data.temperature,
       response.data.humidity,
       dht11.temperature, dht11.humidity);
-
+/*
+    console.log(SrcLog, response);
+*/
+/*
     if(response.data.temperature === undefined || response.data.humidity === undefined){
       updateSyncControl(service, SyncControl);
       setTimeout(function(){deleteSyncDoc(service, SyncDoc);}, 10000);
@@ -166,6 +189,7 @@ function renderSyncDoc(service, SyncDoc, SessionState, SrcLog, res) {
       setTimeout(function(){retrieveSyncDoc(service, SyncDoc, dht11);}, 50000);
       setTimeout(function(){rendering(SessionState, res, dht11);}, 55000);
     }else{
+*/
       dht11 = response.data;
       res.render('dht11', {
        SessionState: SessionState,
@@ -173,7 +197,9 @@ function renderSyncDoc(service, SyncDoc, SessionState, SrcLog, res) {
        title: "EJS example",
        header: "Some users"
       });
+/*
     }
+*/
   })
   .catch(error => {
     console.log(error);
@@ -207,7 +233,7 @@ app.get("/retrieve-control", function(request, response) {
   response.end("Your device control has been retrieved!");
 });
 
-app.get("/update-control", function(request, response) {
+app.get("/pause-sensor", function(request, response) {
   service
        .documents(SyncControl)
        .update({
@@ -219,7 +245,7 @@ app.get("/update-control", function(request, response) {
       .catch(error => {
         console.log(error);
       });
-  response.end("Your device control has been updated!");
+  response.end("Sensor at your home is paused. The connection to Twilio will be setup again. Please check information at its debug port!");
 });
 
 app.get("/create-document", function(request, response) {
@@ -230,6 +256,11 @@ app.get("/create-document", function(request, response) {
 app.get("/delete-document", function(request, response) {
   deleteSyncDoc(service, SyncDoc);
   response.end("Your device document has been deleted!");
+});
+
+app.get("/update-document", function(request, response) {
+  updateSyncDoc(service, SyncDoc);
+  response.end("Your device document has been updated!");
 });
 
 app.get("/retrieve-document", function(request, response) {
@@ -253,7 +284,7 @@ app.get('/', function(req, res){
 
 app.post('/', function(req, res){
   console.log("== entering post/ ==");
-  renderSyncDoc(service, SyncDoc, 1, "Rendering T & H every 1 min.", res);
+  renderSyncDoc(service, SyncDoc, 1, "Rendering T & H every 12 sec.", res);
 
 });
 

@@ -1,7 +1,7 @@
 {
   "name": "twilio-cloud-iot-sensor-esp32-arduino-express-chart-demo",
   "description": "An cloud-iot demo integrating Twilio-Sync, esp32 board (esp-wrover-kit) and temperature/humidity sensor - dht11. Its UI is developed at the platform integrating Node.js (Express) and Chartjs.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Xiaozhong(Jim) Hua <huaxiaozhong1@hotmail.com>",
   "license": "MIT",
   "repository": "https://github.com/huaxiaozhong1/twilio-cloud-iot-sensor-esp32-arduino-express-chart-demo",
@@ -50,6 +50,7 @@
     "setprototypeof": "1.1.0",
     "statuses": "~1.4.0",
     "twilio": "^3.15.0",
+    "twilio-sync": "^0.7.5",
     "type-is": "~1.6.16",
     "utils-merge": "1.0.1",
     "vary": "~1.1.2"
@@ -85,7 +86,7 @@
     "lib/"
   ],
   "scripts": {
-    "start": "node ejs",
+    "start": "node server-api-mode",
     "lint": "eslint .",
     "test": "mocha --require test/support/env --reporter spec --bail --check-leaks --no-exit test/ test/acceptance/",
     "test-ci": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --require test/support/env --reporter spec --check-leaks --no-exit test/ test/acceptance/",
