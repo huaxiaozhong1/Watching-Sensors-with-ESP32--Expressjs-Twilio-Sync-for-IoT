@@ -11,7 +11,7 @@
 #define LED_PIN 2
 
 /* WiFi SSID and Password */
-const char* ssid                        = "0";
+const char* ssid                        = "";
 const char* password                    = "";
 
 /*
