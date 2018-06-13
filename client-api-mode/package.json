@@ -1,0 +1,32 @@
+{
+  "name": "client-api-mode",
+  "version": "0.1.1",
+  "description": "Twilio-iot-sensor-esp32-arduino-express-chart-demo using Twilio Sync javascript client library",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "NODE_ENV=test && ./node_modules/.bin/jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TwilioDevEd/sdk-starter-node.git"
+  },
+  "author": "Twilio Developer Education",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TwilioDevEd/sdk-starter-node/issues"
+  },
+  "homepage": "https://github.com/TwilioDevEd/sdk-starter-node#readme",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "dotenv": "^2.0.0",
+    "camelcase": "^4.1.0",
+    "express": "^4.15.3",
+    "pug": "^2.0.0-rc.2",
+    "twilio": "3.9.0"
+  },
+  "devDependencies": {
+    "jest": "^19.0.2",
+    "jsonwebtoken": "^7.4.0"
+  }
+}

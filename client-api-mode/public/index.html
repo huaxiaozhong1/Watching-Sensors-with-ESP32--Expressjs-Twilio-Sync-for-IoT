@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Twilio Server Starter Kit</title>
+
+  <br> </br>
+  <br> </br>
+
+  <link rel="stylesheet" crossorigin="anonymous"
+    href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u">
+
+  <link rel="stylesheet" href="index.css">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.4/Chart.min.js"></script>
+
+    <div style="width:75%;">
+      <canvas id="myChart"></canvas>
+    </div>
+
+</head>
+<body>
+  <div class="container" style="display:none">
+
+    <h2>Account Information</h2>
+    <table class="table table-striped">
+      <tr>
+        <td class="config-value" id="twilioAccountSid"></td>
+      </tr>
+      <tr>
+        <td class="config-value" id="twilioApiKey"></td>
+      </tr>
+      <tr>
+        <td class="config-value" id="twilioApiSecret"></td>
+      </tr>
+    </table>
+
+    <h2>Products</h2>
+    <table class="table table-striped">
+      <tr>
+        <td class="config-value" id="twilioSyncServiceSid"></td>
+      </tr>
+    </table>
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script crossorigin="anonymous"
+    src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+    integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"></script>
+  <script src="config-check.js"></script>
+
+  <script src="//media.twiliocdn.com/sdk/js/sync/v0.7/twilio-sync.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+
+  <script>
+
+  var ctx = document.getElementById('myChart').getContext('2d');
+
+  var temperature, humidity, SessionState;
+  var datapoints = new Array(7);
+  var humiPoints = new Array(7);
+  var dataCount = 0;
+  var dataLength = datapoints.length;
+
+  var config = {
+    type: 'line',
+    data: {
+      labels: ['-72 sec', '-1 min', '-48 sec', '-36 sec', '-24 sec', '-12 sec', '0 sec'],
+      datasets: [{
+        label: 'Temperature at my home in past 7 * 12 seconds ( *C)',
+        fill: false,
+        lineTension: 0.1,
+        backgroundColor: 'rgba(75,192,192,0.4)',
+        borderColor: 'rgba(75,192,192,1)',
+        borderCapStyle: 'butt',
+        borderDash: [],
+        borderDashOffset: 0.0,
+        borderJoinStyle: 'miter',
+        pointBorderColor: 'rgba(75,192,192,1)',
+        pointBackgroundColor: '#fff',
+        pointBorderWidth: 1,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: 'rgba(75,192,192,1)',
+        pointHoverBorderColor: 'rgba(220,220,220,1)',
+        pointHoverBorderWidth: 2,
+        pointRadius: 1,
+        pointHitRadius: 10,
+        data: datapoints
+      },{
+        label: 'Humidity at my home in past 7 * 12 seconds ( %)',
+        fill: false,
+        lineTension: 0.1,
+        backgroundColor: 'rgba(192,148,75,1)',
+        borderColor: 'rgba(192,148,75,1)',
+        borderCapStyle: 'butt',
+        borderDash: [],
+        borderDashOffset: 0.0,
+        borderJoinStyle: 'miter',
+        pointBorderColor: 'rgba(192,148,75,1)',
+        pointBackgroundColor: '#fff',
+        pointBorderWidth: 1,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: 'rgba(192,148,75,1)',
+        pointHoverBorderColor: 'rgba(220,220,220,1)',
+        pointHoverBorderWidth: 2,
+        pointRadius: 1,
+        pointHitRadius: 10,
+        data: humiPoints
+      }]
+    }
+  };
+
+window.onload = function() {
+    window.myLine = new Chart(ctx, config);
+
+$(function () {
+  $.getJSON('/token', function (tokenResponse) {
+
+    syncClient = new Twilio.Sync.Client(tokenResponse.token, { logLevel: 'info' });
+    syncClient.on('connectionStateChanged', function(state) {
+      if (state != 'connected') {
+        console.log("Sync is not live (websocket connection" + state + "...");
+      } else {
+        // Now that we're connected, lets light up our board and play!
+        console.log('Sync is live!');
+      }
+    });
+
+    console.log("Loading board data ...");
+
+    syncClient.document({id: 'dht11', mode: 'open_existing'}).then(function(syncDoc) {
+      console.log('dht11 is connected');
+      var data = syncDoc.value;
+      if (data.temperature) {
+        console.log('temperature: ' + data.temperature + " , " + 'humidity: ' + data.humidity);
+      }
+
+      syncDoc.on('updated', function(event) {
+        data = event.value;
+        console.log("dht11 was updated: " + data.temperature + ' , ' + data.humidity);
+
+        if(dataCount < dataLength) dataCount++;
+        for (var i = dataLength-dataCount; i < dataLength; i = i+1){
+          datapoints[i-1] = datapoints[i];
+
+          humiPoints[i-1] = humiPoints[i];
+        }
+        datapoints[dataLength - 1] = data.temperature;
+        humiPoints[dataLength - 1] = data.humidity;
+        window.myLine.update();
+      });
+    })
+  })
+});
+}
+
+  </script>
+
+</body>
+</script>
