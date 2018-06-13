@@ -50,7 +50,7 @@ Twilio provides 2 individual API sets that run for Node.js environment. One is d
 
 * Power the board again.
 
-* The photo linking DHT11, esp32-wrover-kit and laptop is as: [sensor-esp-others](sensor-esp-180613-180613.png)
+* The photo linking DHT11, esp32-wrover-kit and laptop is as: [sensor-esp-others](sensor-esp-180613.png)
 
 ### Send command from web app to sensor
 
