@@ -1,4 +1,5 @@
 /* License: MIT */
+
 #include "WiFiClientSecure.h"
 #include "certificates.hpp"
 #include <PubSubClient.h>
@@ -10,12 +11,12 @@
 #define LED_PIN 2
 
 /* WiFi SSID and Password */
-const char* ssid                        = "Tenda_457F60";
-const char* password                    = "62642873";
+const char* ssid                        = "0";
+const char* password                    = "";
 
-/* 
+/*
  *  Sync Settings
- *  
+ *
  *  Enter your document's unique name and a device name.
  */
 const char* sync_document               = "sync/docs/dht11";
@@ -30,8 +31,8 @@ const uint16_t maxMQTTpackageSize       = 512;
 WiFiClientSecure espClient;
 PubSubClient client(mqtt_server, mqtt_port, espClient);
 
-StaticJsonBuffer<maxMQTTpackageSize> jsonBuffer;
-String input = "{\"temperature\":\"0\",\"humidity\":\"0\"}";
+
+String input = "{\"temperature\":\"26\",\"humidity\":\"20\"}";
 
 int pinDHT11 = 2;
 
@@ -44,26 +45,27 @@ long lastReconnectAttempt = 0;
 long lastReadDHT11 = 0;
 long lastSubscribe = 0;
 String srv_cmd;
-/* 
- * Our Twilio Connected Devices message handling callback.  This is passed as a 
- * callback function when we subscribe to the document, and any messages will 
+/*
+ * Our Twilio Connected Devices message handling callback.  This is passed as a
+ * callback function when we subscribe to the document, and any messages will
  * appear here.
  */
-void callback(char* topic, byte* payload, unsigned int length) 
+void callback(char* topic, byte* payload, unsigned int length)
 {
-        std::unique_ptr<char []> msg(new char[length+1]());
-        memcpy (msg.get(), payload, length);
-
-        Serial.print("Message arrived on topic "); Serial.println(msg.get());
+  StaticJsonBuffer<maxMQTTpackageSize> cmdBuffer;
         
-        StaticJsonBuffer<maxMQTTpackageSize> jsonBuffer;
-        JsonObject& root = jsonBuffer.parseObject(msg.get());
+    std::unique_ptr<char []> msg(new char[length+1]());
+    memcpy (msg.get(), payload, length);
 
-        String command = root["msg"];
+    Serial.print("Message arrived on topic "); Serial.println(msg.get());
 
-        srv_cmd = command;
+    JsonObject& cmdRoot = cmdBuffer.parseObject(msg.get());
 
-        Serial.println("srv's command:" + srv_cmd);
+    String command = cmdRoot["msg"];
+
+    srv_cmd = command;
+
+    Serial.println("srv's command:" + srv_cmd);
 
 /*
         String led_command           = root["led"];
@@ -76,21 +78,24 @@ void callback(char* topic, byte* payload, unsigned int length)
                 Serial.println("LED turned off!");
         }
 */
+
+  cmdBuffer.clear();
 }
 
 
-/* 
- * This function connects to Sync via MQTT. We connect using the certificates and 
- * device name defined as constants above, and immediately check the server's 
+/*
+ * This function connects to Sync via MQTT. We connect using the certificates and
+ * device name defined as constants above, and immediately check the server's
  * certificate fingerprint.
- * 
+ *
  * If everything works, we subscribe to the document topic and return.
  */
-boolean connect_mqtt() 
+boolean connect_mqtt()
 {
  Serial.println("\nAttempting to connect to Twilio Sync...");
- 
- if(client.connect(sync_device_name)) {
+
+ if(client.connect("1001", "roger", "password")) {
+  Serial.println("Connected with connection: " + client.state());
    Serial.print("Connected!  Subscribing to "); Serial.println(sync_control);
    client.setCallback(callback);
    client.subscribe(sync_control);
@@ -103,7 +108,7 @@ boolean connect_mqtt()
 
 
 /* In setup, we configure our LED for output, turn it off, and connect to WiFi */
-void setup() 
+void setup()
 {
         Serial.begin(115200);
         WiFi.begin(ssid, password);
@@ -121,18 +126,22 @@ void setup()
         Serial.println(WiFi.localIP());
 
         // Set the root CA (to validate you are talking to Twilio) and the client key and cert
+        
         espClient.setCACert(root_cert);
         espClient.setCertificate(client_cert);
         espClient.setPrivateKey(client_key);
+        
 }
 
 
 /* Our loop constantly checks we are still connected.  On disconnects we try again. */
-void loop() 
+void loop()
 {
+  StaticJsonBuffer<maxMQTTpackageSize> dataBuffer;
+  
   if(!client.connected()){
     long now = millis();
-    if((now - lastReconnectAttempt) > 2000){    // try to connect srv in every 2 seconds.
+    if((now - lastReconnectAttempt) > 5000){    // try to connect srv in every 5 seconds.
       lastReconnectAttempt = now;
       if(connect_mqtt()){                     // the actual function to connect.
         lastReconnectAttempt = 0;
@@ -141,42 +150,42 @@ void loop()
   }
   else{    // if connected.
     long dht11_now = millis();    // get the current seconds, to see if reading.
-    
+
     if((dht11_now -lastReadDHT11) > 10000){    // read dht11 every 10 seconds.
       lastReadDHT11 = dht11_now;
-      
+
       if((err = dht11.read(pinDHT11, &temperature, &humidity, NULL)) == SimpleDHTErrSuccess){
 
         Serial.print("Sample OK: ");
-        Serial.print((int)temperature); Serial.print(" *C, "); 
+        Serial.print((int)temperature); Serial.print(" *C, ");
         Serial.print((int)humidity); Serial.println(" H");
-        
+
 //        lastReadDHT11 = 0;        // if succeed in reading of dht11.
 
-        JsonObject& root = jsonBuffer.parseObject(input);
-    
-        long Temperature = root[String("temperature")];
+        JsonObject& dataRoot = dataBuffer.parseObject(input);
+
+        long Temperature = dataRoot[String("temperature")];
         Temperature = (long) temperature;
-        root[String("temperature")] = Temperature;
-    
-        long Humidity = root[String("humidity")];
+        dataRoot[String("temperature")] = Temperature;
+
+        long Humidity = dataRoot[String("humidity")];
         Humidity = (long) humidity;
-        root[String("humidity")] = Humidity;
-    
+        dataRoot[String("humidity")] = Humidity;
+
         String output;
-        root.printTo(output);
+        dataRoot.printTo(output);
 
         char payload[512];
 
         strcpy(payload, output.c_str());
 
         long subscribe_now = millis();
-        if((subscribe_now - lastSubscribe) > 60000){    // subscribe every 1 min.
+        if((subscribe_now - lastSubscribe) > 12000){    // subscribe every 12 secs, according to update-rate at "server-api-mode" side.
 
         Serial.print("data publish time: ");
-        Serial.print((long)subscribe_now); Serial.print(", "); 
+        Serial.print((long)subscribe_now); Serial.print(", ");
         Serial.print((long)lastSubscribe); Serial.println(". ");
-          
+
           lastSubscribe = subscribe_now;
 
           if(srv_cmd == "pause"){
@@ -185,20 +194,24 @@ void loop()
           }
           else{
               if((client.publish(
-                sync_document, 
-                payload))==true){        // if success.   
-                Serial.println("Succeed in sending T & H to Twilio.");
+                sync_document,
+//                "{\"temperature\":\"26\",\"humidity\":\"20\"}"))==true){        // if success.
+                 payload))==true){        // if success.
+                 Serial.println("Succeed in sending T & H to Twilio.");
+                for(int i=0; i<64; i++){
+                  Serial.printf("%x ", payload[i]);
+                }
+                Serial.println();
               }else{
                 Serial.println("Failure with publish: " + client.state());
               }
           }
-
+        dataBuffer.clear();
         }
       }
     }
   }
 
   client.loop();    // handle msg sent from srv right after checking srv connection and reading dht11.
-     
-}    // end of function of "loop".
 
+}    // end of function of "loop".
