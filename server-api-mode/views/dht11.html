@@ -16,13 +16,13 @@
 var ctx = document.getElementById('myChart').getContext('2d');
 
 var temperature, humidity, SessionState;
-var datapoints = new Array(7);
-var humiPoints = new Array(7);
+var temppoints = new Array(14);
+var humiPoints = new Array(14);
 
 var config = {
   type: 'line',
   data: {
-    labels: ['-72 sec', '-1 min', '-48 sec', '-36 sec', '-24 sec', '-12 sec', '0 sec'],
+    labels: ['-39 sec', '-36 sec', '-33 sec', '-30 sec', '-27 sec', '-24 sec', '21 sec', '-18 sec', '-15 sec', '-12 sec', '-9 sec', '-6 sec', '-3 sec', '0 sec'],
     datasets: [{
       label: 'Temperature at my home ( *C)',
       fill: false,
@@ -42,7 +42,7 @@ var config = {
       pointHoverBorderWidth: 2,
       pointRadius: 1,
       pointHitRadius: 10,
-      data: datapoints
+      data: temppoints
     },{
       label: 'Humidity at my home ( %)',
       fill: false,
@@ -72,15 +72,15 @@ sessionStorage.setItem("DataCount", 0);
 window.onload = function() {
 
   window.myLine = new Chart(ctx, config);
-  var dataLength = datapoints.length;
+  var dataLength = temppoints.length;
 
   temperature = "<%= dht11.temperature %>";
   humidity = "<%= dht11.humidity %>";
   SessionState = "<%= SessionState %>";
-  console.log(temperature, humidity, SessionState, datapoints.length);
+  console.log(temperature, humidity, SessionState, temppoints.length);
 
-  //for (var i = datapoints.length; i >= 6; --i) {
-  //  datapoints[i] = Math.floor(Math.random() * 100);
+  //for (var i = temppoints.length; i >= 6; --i) {
+  //  temppoints[i] = Math.floor(Math.random() * 100);
   //}
 
   if(SessionState == 0){
@@ -89,31 +89,31 @@ window.onload = function() {
 
     var tempName = dataLength-1;
     localStorage.setItem(tempName.toString(), temperature);
-    datapoints[dataLength - 1] = temperature;
+    temppoints[dataLength - 1] = temperature;
 
     var humiName = tempName + 'h';
     localStorage.setItem(humiName.toString(), humidity);
     humiPoints[dataLength - 1] = humidity;
 
-//    console.log("---1----", dataLength, datapoints[dataLength-1]);
+//    console.log("---1----", dataLength, temppoints[dataLength-1]);
 
   }else{
     DataCount = localStorage.getItem("DataCount");
 
     for (var i = dataLength-DataCount; i < dataLength; i = i+1){
-      datapoints[i-1] = localStorage.getItem(i.toString());
+      temppoints[i-1] = localStorage.getItem(i.toString());
 
       var humiName = i.toString() + 'h';
       humiPoints[i-1] = localStorage.getItem(humiName.toString());
 
       var tempName = i-1;
-      localStorage.setItem(tempName.toString(), datapoints[i-1]);
+      localStorage.setItem(tempName.toString(), temppoints[i-1]);
 
       var humiName = tempName + 'h';
       localStorage.setItem(humiName.toString(), humiPoints[i-1]);
-//      console.log("---2----", i, localStorage.getItem(i.toString()),datapoints[i-1]);
+//      console.log("---2----", i, localStorage.getItem(i.toString()),temppoints[i-1]);
     }
-    datapoints[dataLength - 1] = temperature;
+    temppoints[dataLength - 1] = temperature;
     var tempName = dataLength-1;
     localStorage.setItem(tempName.toString(), temperature);
 
@@ -141,7 +141,7 @@ window.onload = function() {
   {
     document.getElementById("updateChart").submit();
   }
-  setTimeout(updateData, 12000);
+  setTimeout(updateData, 3000);
 
   </script>
   </body>

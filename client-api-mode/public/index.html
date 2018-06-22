@@ -42,6 +42,7 @@
       </tr>
     </table>
 
+
   <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
   <script crossorigin="anonymous"
     src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
@@ -49,24 +50,22 @@
   <script src="config-check.js"></script>
 
   <script src="//media.twiliocdn.com/sdk/js/sync/v0.7/twilio-sync.min.js"></script>
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-
   <script>
 
   var ctx = document.getElementById('myChart').getContext('2d');
 
   var temperature, humidity, SessionState;
-  var datapoints = new Array(7);
-  var humiPoints = new Array(7);
+  var temppoints = new Array(14);
+  var humiPoints = new Array(14);
   var dataCount = 0;
-  var dataLength = datapoints.length;
+  var dataLength = temppoints.length;
 
   var config = {
     type: 'line',
     data: {
-      labels: ['-72 sec', '-1 min', '-48 sec', '-36 sec', '-24 sec', '-12 sec', '0 sec'],
+      labels: ['-39 sec', '-36 sec', '-33 sec', '-30 sec', '-27 sec', '-24 sec', '21 sec', '-18 sec', '-15 sec', '-12 sec', '-9 sec', '-6 sec', '-3 sec', '0 sec'],
       datasets: [{
-        label: 'Temperature at my home in past 7 * 12 seconds ( *C)',
+        label: 'Temperature at my home in past 14 * 3 seconds ( *C)',
         fill: false,
         lineTension: 0.1,
         backgroundColor: 'rgba(75,192,192,0.4)',
@@ -84,9 +83,9 @@
         pointHoverBorderWidth: 2,
         pointRadius: 1,
         pointHitRadius: 10,
-        data: datapoints
+        data: temppoints
       },{
-        label: 'Humidity at my home in past 7 * 12 seconds ( %)',
+        label: 'Humidity at my home in past 14 * 3 seconds ( %)',
         fill: false,
         lineTension: 0.1,
         backgroundColor: 'rgba(192,148,75,1)',
@@ -140,11 +139,11 @@ $(function () {
 
         if(dataCount < dataLength) dataCount++;
         for (var i = dataLength-dataCount; i < dataLength; i = i+1){
-          datapoints[i-1] = datapoints[i];
+          temppoints[i-1] = temppoints[i];
 
           humiPoints[i-1] = humiPoints[i];
         }
-        datapoints[dataLength - 1] = data.temperature;
+        temppoints[dataLength - 1] = data.temperature;
         humiPoints[dataLength - 1] = data.humidity;
         window.myLine.update();
       });

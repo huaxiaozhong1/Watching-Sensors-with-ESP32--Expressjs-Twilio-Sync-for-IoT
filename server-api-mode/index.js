@@ -158,7 +158,7 @@ function rendering(SessionState, res, dht11) {
   res.render('dht11', {
     SessionState: SessionState,
     dht11: dht11,
-    title: "EJS example",
+    title: "Temperature/Humidity monitor for my home",
     header: "Some users"
    });
 }
@@ -194,7 +194,7 @@ function renderSyncDoc(service, SyncDoc, SessionState, SrcLog, res) {
       res.render('dht11', {
        SessionState: SessionState,
        dht11: dht11,
-       title: "EJS example",
+       title: "Temperature/Humidity monitor for my home",
        header: "Some users"
       });
 /*
@@ -284,7 +284,7 @@ app.get('/', function(req, res){
 
 app.post('/', function(req, res){
   console.log("== entering post/ ==");
-  renderSyncDoc(service, SyncDoc, 1, "Rendering T & H every 12 sec.", res);
+  renderSyncDoc(service, SyncDoc, 1, "Rendering T & H every 3 sec.", res);
 
 });
 
