@@ -11,19 +11,14 @@
 #define LED_PIN 2
 
 /* WiFi SSID and Password */
-const char* ssid                        = "Tenda_457F60";
-const char* password                    = "62642873";
+const char* ssid                        = "";
+const char* password                    = "";
 
 /*
  *  Sync Settings
  *
  *  Enter your document's unique name and a device name.
  */
- /*
-const char* sync_publish               = "sync/docs/dht11";
-const char* sync_subscribe                = "sync/docs/BoardLED";
-const char* sync_device_name            = "ESP32_Dev_Board";
-*/
 const char* sync_publish               = "sync/docs/dht11";
 const char* sync_subscribe                = "sync/docs/BoardLED";
 const char* sync_device_name            = "ESP32_Dev_Board";
