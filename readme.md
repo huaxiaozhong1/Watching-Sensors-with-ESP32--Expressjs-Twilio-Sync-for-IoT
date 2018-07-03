@@ -6,7 +6,7 @@ Twilio provides 2 individual API sets that run for Express.js environment. One i
 
 ### To run web app with "server-api-mode"
 
-* git clone https://github.com/huaxiaozhong1/twilio-sync-esp32-wrover-kit-express-chartjs-demo.git
+* git clone https://github.com/huaxiaozhong1/Watching-Sensors-with-ESP32--Expressjs-Twilio-Sync-for-IoT.git
 
 * cd twilio-sync-esp32-wrover-kit-express-chartjs-demo
 
